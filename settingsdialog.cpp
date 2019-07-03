@@ -38,6 +38,22 @@ SettingsDialog::SettingsDialog( QWidget *parent ) :
     QObject::connect( ui->extensions_list_widget,
                       &QListWidget::customContextMenuRequested, this,
                       &SettingsDialog::OnExtensionCustomContextMenuRequested );
+    QObject::connect( &app_settings, &utilities::AppSettings::default_changed,
+                      this, &SettingsDialog::OnDefaultLanguageChanged );
+}
+
+void SettingsDialog::OnDefaultLanguageChanged( int const new_default )
+{
+    if( default_ == new_default ) return;
+
+    int const previous_default = default_;
+    default_ = new_default;
+    QString const old_text { languages[previous_default].language_name };
+    QString const new_text { ui->languages_list_widget->item(default_)->text()
+                + "(default)" };
+    ui->languages_list_widget->item( default_ )->setText( new_text );
+    ui->languages_list_widget->item( previous_default )->setText( old_text );
+    app_settings.SetDefault( default_ );
 }
 
 void SettingsDialog::OnExtensionCustomContextMenuRequested( QPoint const & pos )
@@ -119,15 +135,6 @@ void SettingsDialog::OnLanguageCustomContextMenuRequested( QPoint const & pos )
         app_settings.RemoveLanguage( index.row() );
         delete ui->languages_list_widget->currentItem();
     };
-    auto default_event = [=]() mutable {
-        int const previous_default = default_;
-        this->default_ = ui->languages_list_widget->currentRow();
-        QString const old_text { languages[previous_default].language_name };
-        QString const new_text {
-            ui->languages_list_widget->currentItem()->text() + "(default)" };
-        ui->languages_list_widget->currentItem()->setText( new_text );
-        ui->languages_list_widget->item( previous_default )->setText( old_text );
-    };
     auto edit_event = [=]{};
 
     QMenu menu {};
@@ -142,7 +149,9 @@ void SettingsDialog::OnLanguageCustomContextMenuRequested( QPoint const & pos )
 
         connect( action_edit_language, &QAction::triggered, edit_event );
         connect( action_remove_language, &QAction::triggered, remove_event );
-        connect( action_make_default, &QAction::triggered, default_event );
+        connect( action_make_default, &QAction::triggered, [=]{
+            OnDefaultLanguageChanged( ui->languages_list_widget->currentRow() );
+        });
 
         menu.addAction( action_make_default );
         menu.addAction( action_edit_language );

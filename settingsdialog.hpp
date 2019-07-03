@@ -18,6 +18,7 @@ public:
 private:
     void OnLanguageCustomContextMenuRequested( QPoint const & pos );
     void OnExtensionCustomContextMenuRequested( QPoint const &pos );
+    void OnDefaultLanguageChanged( int const );
 private:
     Ui::SettingsDialog *ui;
     utilities::AppSettings& app_settings;

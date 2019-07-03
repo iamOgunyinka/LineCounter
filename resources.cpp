@@ -36,6 +36,7 @@ AppSettings& AppSettings::GetAppSettings()
 
 void AppSettings::SetDefault( int value )
 {
+    if( value == GetDefaultLanguageIndex() ) return;
     settings.setValue( "default", value );
     emit default_changed( value );
 }
