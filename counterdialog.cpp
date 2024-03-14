@@ -42,18 +42,33 @@ void CounterDialog::CheckFile( QString const & name )
     file_list_info.append( FileInfo{ name, line } );
 }
 
-void CounterDialog::CheckDirectory( QString const & name,
-                                    QStringList const & extensions )
-{
-    QDirIterator iter{ name, QDirIterator::Subdirectories
+void CounterDialog::ProcessDirectory(QString const &directory, QStringList const &extensions) {
+    QDirIterator iter{directory, QDirIterator::Subdirectories
                 | QDirIterator::FollowSymlinks };
-    while( iter.hasNext() ){
-        auto const current_file{ iter.fileInfo() };
-        if( current_file.isFile() &&
-                extensions.contains( current_file.completeSuffix() ) ){
-            CheckFile( iter.filePath() );
+    while (iter.hasNext()) {
+      auto const current_file{ iter.fileInfo() };
+      if(current_file.isFile() && extensions.contains(current_file.completeSuffix()))
+        CheckFile(iter.filePath());
+      iter.next();
+    }
+}
+
+void CounterDialog::CheckDirectory(QString const & name, QStringList const & extensions)
+{
+    static QStringList const exclude {"external", "ext", "build", "x86-build"};
+
+    std::filesystem::path const root_path(name.toStdString());
+    for (auto const &dir_entry: std::filesystem::directory_iterator(root_path)) {
+        auto const path = dir_entry.path();
+        auto const base_path = QString::fromStdString(path.stem().string());
+        if (dir_entry.is_directory()) {
+            if (base_path.startsWith('.') || exclude.contains(base_path))
+                continue;
+            ProcessDirectory(QString::fromStdString(path.string()), extensions);
+        } else if (dir_entry.is_regular_file() &&
+                   extensions.contains(QString::fromStdString(path.extension()))) {
+            CheckFile(QString::fromStdString(path.string()));
         }
-        iter.next();
     }
 }
 
@@ -120,7 +135,7 @@ QVariant FileInfoModel::data( QModelIndex const &index, int role ) const
 {
     int const column{ index.column() };
     int const row{ index.row() };
-    int const row_count{ file_info_.size() };
+    int const row_count = file_info_.size();
 
     if( role == Qt::DisplayRole ){
         if( row < row_count ){

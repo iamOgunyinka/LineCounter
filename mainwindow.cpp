@@ -3,6 +3,7 @@
 
 #include "counterdialog.hpp"
 #include "settingsdialog.hpp"
+#include <QActionGroup>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,7 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
         QActionGroup* action_group{
             qobject_cast<QActionGroup*>( languages_menu->actions()[0]->parent() )
         };
-        QAction* action_language { new QAction( name, action_group ) };
+        QAction* action_language { new QAction(name) };
+        action_language->setActionGroup(action_group);
         action_language->setCheckable( true );
         languages_menu->addAction( action_language );
         QObject::connect( action_language, &QAction::triggered, [=]{

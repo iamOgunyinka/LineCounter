@@ -27,6 +27,7 @@ private:
     void CheckDirectory( QString const & name,
                          QStringList const &extensions );
     void DisplayInfo();
+    void ProcessDirectory(QString const &directory, QStringList const &extensions);
 private:
     Ui::CounterDialog *ui;
     QVector<FileInfo> file_list_info{};
